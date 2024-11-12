@@ -1,124 +1,135 @@
-
-<div class="d-flex flex-column flex-center flex-column-fluid">
-    <div class="d-flex flex-column flex-center text-center p-10">
-      <div class="card card-flush  w-lg-650px py-5" style="max-width: 650px; margin: 100px auto;">
-        <div class="card-body py-15 py-lg-20">
-            <form class="form w-100" [formGroup]="loginForm" novalidate="novalidate" id="kt_login_signin_form"
-            (ngSubmit)="submit($event)">
-
-            <div class="text-center mb-11">
-                <h1 class="text-gray-900 fw-bolder mb-3">
-                Iniciar Sesion
-                </h1>
-            </div>
-
-
-
-
+<!-- Login Area  -->
+<div class="login-wrapper inner-form-wrap pt-130 pb-130">
+    <div class="container mt-5">
+      <div class="row justify-content-center">
+        <div class="col-lg-5 border p-3" data-aos="fade-up">
+          <form class="login-form"
+                [formGroup]="loginForm"
+                (ngSubmit)="submit()">
+            <!-- Form Title -->
+            <h2 class="form-title">Iniciar Sesion</h2>
             <ng-container *ngIf="hasError">
-                <div class="mb-lg-15 alert alert-danger">
+              <div class="mb-lg-15 alert alert-danger">
                 <div class="alert-text font-weight-bold">
-                    {{ message }}
-
+                  Datos incorrectos
                 </div>
-                </div>
+              </div>
             </ng-container>
-            <div class="fv-row mb-8">
-                <label class="form-label fs-6 fw-bolder text-gray-900">Email</label>
-                <input class="form-control bg-transparent" type="email" name="email" formControlName="email" autocomplete="off"
-                [ngClass]="{
-                    'is-invalid': loginForm.controls['email'].invalid,
-                    'is-valid': loginForm.controls['email'].valid
-                }" />
-                <ng-container
+            <!-- Single Input -->
+            <div class="form-group">
+              <label for="loginUserId" class="sr-only">Dirección de correo electrónico*</label>
+              <input class="form-control" placeholder="Dirección de correo electrónico*" id="loginUserId"
+                     type="email"
+                     name="email"
+                     formControlName="email"
+                     autocomplete="off"
+                     [ngClass]="{
+                        'is-invalid': loginForm.controls['email'].invalid,
+                        'is-valid': loginForm.controls['email'].valid
+                     }">
+              <ng-container
                 [ngTemplateOutlet]="formError"
                 [ngTemplateOutletContext]="{
-                validation: 'required',
-                message: 'El correo electronico es obligatorio',
-                control: loginForm.controls['email']
+                  validation: 'required',
+                  message: 'Email is obligatorio',
+                  control: loginForm.controls['email']
                 }">
-                </ng-container>
-
-                <ng-container
+              </ng-container>
+              <ng-container
                 [ngTemplateOutlet]="formError"
                 [ngTemplateOutletContext]="{
-                validation: 'pattern',
-                message: 'El correo electronico tiene el formato incorrecto',
-                control: loginForm.controls['email']
+                  validation: 'email',
+                  message: 'Email es invalido',
+                  control: loginForm.controls['email']
                 }">
-                </ng-container>
-
-                <ng-container
+              </ng-container>
+              <ng-container
                 [ngTemplateOutlet]="formError"
                 [ngTemplateOutletContext]="{
-                validation: 'minlength',
-                message: 'El correo electronico debe tener al menos 10 símbolos',
-                control: loginForm.controls['email']
+                  validation: 'minLength',
+                  message: 'Email debe tener minimo 3 simbolos',
+                  control: loginForm.controls['email']
                 }">
-                </ng-container>
-                <ng-container
+              </ng-container>
+              <ng-container
                 [ngTemplateOutlet]="formError"
                 [ngTemplateOutletContext]="{
-                validation: 'maxlength',
-                message: 'El correo electronico debe tener un máximo de 360 símbolos',
-                control: loginForm.controls['email']
+                  validation: 'maxLength',
+                  message: 'Email debe tener maximo 360 simbolos',
+                  control: loginForm.controls['email']
                 }">
-                </ng-container>
+              </ng-container>
             </div>
-            <div class="fv-row mb-3">
-
-                <label class="form-label fw-bolder text-gray-900 fs-6 mb-0">Contraseña</label>
-
-                <input class="form-control bg-transparent" type="password" name="password" autocomplete="off"
-                formControlName="password" [ngClass]="{
-                    'is-invalid': loginForm.controls['password'].invalid,
-                    'is-valid': loginForm.controls['password'].valid
-                }" />
-                <ng-container [ngTemplateOutlet]="formError" [ngTemplateOutletContext]="{
-                    validation: 'required',
-                    message: 'la contraseña es obligatoria',
-                    control: loginForm.controls['password']
-                }"></ng-container>
-                <ng-container [ngTemplateOutlet]="formError" [ngTemplateOutletContext]="{
-                    validation: 'minlength',
-                    message: 'la contraseña debe tener minimo 3 caracteres',
-                    control: loginForm.controls['password']
-                }"></ng-container>
-                <ng-container [ngTemplateOutlet]="formError" [ngTemplateOutletContext]="{
-                    validation: 'maxLength',
-                    message: 'la contraseña debe terner maximo 100 caracteres',
-                    control: loginForm.controls['password']
-                }"></ng-container>
-
+            <!-- Single Input -->
+            <div class="form-group">
+              <label for="loginUserPass" class="sr-only">Contraseña</label>
+              <input class="form-control" placeholder="Contraseña" id="loginUserPass"
+                     type="password"
+                     name="password"
+                     autocomplete="off"
+                     formControlName="password"
+                     [ngClass]="{
+                        'is-invalid': loginForm.controls['password'].invalid,
+                        'is-valid': loginForm.controls['password'].valid
+                     }">
+              <ng-container
+                [ngTemplateOutlet]="formError"
+                [ngTemplateOutletContext]="{
+          validation: 'required',
+          message: 'Contraseña obligatoria',
+          control: loginForm.controls['password']
+        }"
+              ></ng-container>
+              <ng-container
+                [ngTemplateOutlet]="formError"
+                [ngTemplateOutletContext]="{
+                  validation: 'minlength',
+                  message: 'La contraseña debe tener minimo 3 simbolos',
+                  control: loginForm.controls['password']
+                }">
+  
+              </ng-container>
+              <ng-container
+                [ngTemplateOutlet]="formError"
+                [ngTemplateOutletContext]="{
+                  validation: 'maxLength',
+                  message: 'La contraseña debe tener maximo 100 simbolos',
+                  control: loginForm.controls['password']
+                }">
+              </ng-container>
             </div>
-
-            <div class="d-grid mb-10">
-                <button type="submit" id="kt_sign_in_submit" class="btn btn-primary" >
+            <div class="form-group mb-0 mt-5 text-center">
+              <button class="btn btn-primary" type="submit"
+                      [disabled]="loginForm.invalid">
                 <ng-container *ngIf="isLoading$ | async">
-                    <span class="indicator-progress" [style.display]="'block'">
-                    Por favor espere...
-                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                    </span>
+                  <span class="indicator-progress" [style.display]="'block'">
+                    Espere por favor...
+                    <span
+                      class="spinner-border spinner-border-sm align-middle ms-2"
+                    ></span>
+                  </span>
                 </ng-container>
-                <ng-container *ngIf="(isLoading$ | async) === false">
-                    <span class="indicator-label">Continuar</span>
+                <ng-container *ngIf="!(isLoading$ | async)">
+                  <span class="indicator-label">Acceso</span>
                 </ng-container>
-                </button>
+              </button>
             </div>
-
-            </form>
-
-
-            <ng-template #formError let-control="control" let-message="message" let-validation="validation">
+  
+          </form>
+          <ng-template
+            #formError
+            let-control="control"
+            let-message="message"
+            let-validation="validation">
             <ng-container *ngIf="control.hasError(validation) && (control.dirty || control.touched)">
-                <div class="fv-plugins-message-container">
+              <div class="fv-plugins-message-container">
                 <span role="alert">
-                    {{ message }}
+                  {{ message }}
                 </span>
-                </div>
+              </div>
             </ng-container>
-            </ng-template>
+          </ng-template>
         </div>
+      </div>
     </div>
   </div>
-</div>

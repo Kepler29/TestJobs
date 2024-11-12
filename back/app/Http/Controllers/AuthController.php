@@ -59,10 +59,12 @@ class AuthController extends Controller
     {
         try {
             $user = JWTAuth::parseToken()->authenticate();
+            $user->load('roles');
         } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
             return response()->json(['error' => 'User not found'], 404);
         }
 
-        return response()->json(compact('user'));
+        // return response()->json(compact('user'));
+        return response()->json(['user' => $user, 'roles' => $user->roles]);
     }
 }

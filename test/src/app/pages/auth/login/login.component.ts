@@ -1,17 +1,22 @@
-import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription, Observable, first } from 'rxjs'
+import { Component } from '@angular/core';
+import { AsyncPipe, NgClass, NgIf, NgTemplateOutlet } from "@angular/common";
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
+import { ActivatedRoute, Router, RouterModule } from "@angular/router";
+import { BehaviorSubject, first, Observable, Subscription } from "rxjs";
 import { AuthService } from '../../../services/auth.service';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ CommonModule ],
+  imports: [ 
+    AsyncPipe,
+    NgIf,
+    NgTemplateOutlet,
+    ReactiveFormsModule,
+    RouterModule,
+    NgClass, ],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css',
-  schemas: [NO_ERRORS_SCHEMA]
+  styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
 
@@ -19,14 +24,15 @@ export class LoginComponent {
     email: '',
     password: '',
   };
-  message: string = '';
-  loginForm!: FormGroup;
-  hasError: boolean | undefined;
-  returnUrl: string | undefined;
-  isLoading$: Observable<boolean>;
+  loginForm: FormGroup;
+  hasError: boolean;
+  returnUrl: string;
+  isLoading$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  isLoading: boolean = false;
+  loading: boolean = false;
 
-
-  private unsubscribe: Subscription[] = []; 
+  // private fields
+  private unsubscribe: Subscription[] = []; // Read more: => https://brianflove.com/2016/12/11/anguar-2-unsubscribe-observables/
 
   constructor(
     private fb: FormBuilder,
@@ -34,8 +40,11 @@ export class LoginComponent {
     private route: ActivatedRoute,
     private router: Router
   ) {
-    this.isLoading$ = this.authService.isLoading$;
-
+    const loadingSubscr = this.isLoading$
+      .asObservable()
+      .subscribe((res) => (this.isLoading = res));
+    this.unsubscribe.push(loadingSubscr);
+    // redirect to home if already logged in
     if (this.authService.currentUserValue) {
       this.router.navigate(['/']);
     }
@@ -43,13 +52,13 @@ export class LoginComponent {
 
   ngOnInit(): void {
     this.initForm();
+    // get return url from route parameters or default to '/'
     this.returnUrl =
       this.route.snapshot.queryParams['returnUrl'.toString()] || '/';
   }
 
-
+  // convenience getter for easy access to form fields
   get f() {
-    //@ts-ignore
     return this.loginForm.controls;
   }
 
@@ -61,7 +70,7 @@ export class LoginComponent {
           Validators.required,
           Validators.email,
           Validators.minLength(3),
-          Validators.maxLength(320),
+          Validators.maxLength(320), // https://stackoverflow.com/questions/386294/what-is-the-maximum-length-of-a-valid-email-address
         ]),
       ],
       password: [
@@ -75,26 +84,22 @@ export class LoginComponent {
     });
   }
 
-  submit(event: Event) {
-    if (this.loginForm.valid) {
-      event.preventDefault();
-      console.log('se entra');
-      this.hasError = false;
-      const loginSubscr = this.authService
-        .login(this.f['email'].value, this.f['password'].value)
-        .pipe(first())
-        .subscribe((user: any | undefined) => {
-          //@ts-ignore
-          if (user.error) {
-            //@ts-ignore
-            this.message =  user.error.message
-            this.hasError = true;
-          } else {
-            this.router.navigate([this.returnUrl]);
-          }
-        });
-      this.unsubscribe.push(loginSubscr);
-    }
+  submit() {
+    this.hasError = false;
+    this.isLoading$.next(true);
+    const loginSubscr = this.authService
+      .login(this.f['email'].value, this.f['password'].value)
+      .pipe(first())
+      .subscribe(user => {
+        if (user) {
+          this.router.navigate([this.returnUrl]);
+          // window.location.replace(this.returnUrl);
+        } else {
+          this.hasError = true;
+        }
+        this.isLoading$.next(false);
+      });
+    this.unsubscribe.push(loginSubscr);
   }
 
   ngOnDestroy() {

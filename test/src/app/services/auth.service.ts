@@ -22,49 +22,40 @@ export class AuthService {
   private expirationTimeout: any; 
 
 
-  currentUser$: Observable<UserType>;
+  currentUser$: Observable<any>;
   isLoading$: Observable<boolean>;
-  currentUserSubject: BehaviorSubject<UserType>;
+  currentUserSubject: BehaviorSubject<any | null> = new BehaviorSubject<any | null>(null);
   isLoadingSubject: BehaviorSubject<boolean>;
 
-  get currentUserValue(): UserType {
-    return this.currentUserSubject.value;
+  get currentUserValue(): any | null {
+    return this.currentUserSubject ? this.currentUserSubject.value : null;
   }
 
-  set currentUserValue(user: UserType) {
+  set currentUserValue(user: any) {
     this.currentUserSubject.next(user);
   }
 
   constructor(
-    @Inject(PLATFORM_ID) private platformId: Object,
     private authHttpService: AuthHttpService,
-    private router: Router
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isLoadingSubject = new BehaviorSubject<boolean>(false);
-    this.currentUserSubject = new BehaviorSubject<UserType>(undefined);
-    this.currentUser$ = this.currentUserSubject.asObservable();
     this.isLoading$ = this.isLoadingSubject.asObservable();
-    const subscr = this.getUserByToken().subscribe();
-    this.unsubscribe.push(subscr);
   }
 
   // public methods
-  login(email: string, password: string): Observable<UserType> {
+  login(email: string, password: string): Observable<any> {
     this.isLoadingSubject.next(true);
     return this.authHttpService.login(email, password).pipe(
-      map((auth: AuthModel) => {
-        this.setAuthFromLocalStorage(auth); 
-        return auth; 
-      }),
-      tap((auth: AuthModel) => {
-        if (auth && auth.authToken) {
-          this.setSession(auth.authToken); 
-        }
+      map((auth: any) => {
+        const result = this.setAuthFromLocalStorage(auth);
+        return result;
       }),
       switchMap(() => this.getUserByToken()),
       catchError((err) => {
         console.error('err', err);
-        return of(err);
+        return of(undefined);
       }),
       finalize(() => this.isLoadingSubject.next(false))
     );
@@ -73,85 +64,70 @@ export class AuthService {
   logout() {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(this.authLocalStorageToken);
-      sessionStorage.removeItem(this.authLocalStorageToken); 
-      clearTimeout(this.expirationTimeout);  
-      this.router.navigate(['/auth/login'], {
-        queryParams: {},
-      });
     }
+    window.location.replace('/auth/login')
   }
 
-
-  private setSession(token: string) {
-    const decodedToken: any = jwtDecode(token);
-    const expirationDate = new Date(0);
-    expirationDate.setUTCSeconds(decodedToken.exp);
-
-    const expiresIn = expirationDate.getTime() - new Date().getTime();
-
-
-    this.expirationTimeout = setTimeout(() => {
-      this.handleTokenExpired();
-    }, expiresIn);
-  }
-
-  private handleTokenExpired() {
-    this.logout();  
-  }
-
-  getUserByToken(): Observable<UserType> {
+  getUserByToken(): Observable<any> {
     const auth = this.getAuthFromLocalStorage();
-    if (!auth || !auth.authToken) {
+    if (!auth || !auth.token) {
       return of(undefined);
     }
 
     this.isLoadingSubject.next(true);
-    return this.authHttpService.getUserByToken(auth.authToken).pipe(
-      map((user: UserType) => {
-        if (user) {
-          this.currentUserSubject.next(user);
+    return this.authHttpService.getUserByToken(auth.token).pipe(
+      map((data: any) => {
+        if (data.user) {
+          this.currentUserSubject.next(data.user);
         } else {
           this.logout();
         }
-        return user;
+        return data.user;
       }),
       finalize(() => this.isLoadingSubject.next(false))
     );
   }
 
-  private setAuthFromLocalStorage(auth: AuthModel): boolean {
-    if (isPlatformBrowser(this.platformId)) {
-      if (auth && auth.authToken) {
-        localStorage.setItem(this.authLocalStorageToken, JSON.stringify(auth));
-        this.setSession(auth.authToken); 
-        return true;
-      }
-      return false;
+  findToken(token: string): Observable<any> {
+    this.isLoadingSubject.next(true);
+    return this.authHttpService.findToken(token).pipe(
+        map((auth: any) => {
+          const result = this.setAuthFromLocalStorage(auth);
+          return result;
+        }),
+        switchMap(() => this.getUserByToken()),
+        catchError((err) => {
+          console.error('err', err);
+          return of(undefined);
+        }),
+        finalize(() => this.isLoadingSubject.next(false))
+    );
+  }
+
+  private setAuthFromLocalStorage(auth: any): boolean {
+    if (auth && auth.token) {
+      localStorage.setItem(this.authLocalStorageToken, JSON.stringify(auth));
+      return true;
     }
     return false;
   }
 
-  getAuthFromLocalStorage(): AuthModel | undefined {
-    if (isPlatformBrowser(this.platformId)) {
-      try {
-        const lsValue = localStorage.getItem(this.authLocalStorageToken);
-        if (!lsValue) {
-          return undefined;
-        }
-  
-        const authData: AuthModel = JSON.parse(lsValue);
-        return authData;
-      } catch (error) {
-        console.error(error);
+  public getAuthFromLocalStorage(): any | undefined {
+    try {
+      const lsValue = localStorage.getItem(this.authLocalStorageToken);
+      if (!lsValue) {
         return undefined;
       }
+
+      const authData = JSON.parse(lsValue);
+      return authData;
+    } catch (error) {
+      console.error(error);
+      return undefined;
     }
-    return undefined; 
   }
-  
 
   ngOnDestroy() {
     this.unsubscribe.forEach((sb) => sb.unsubscribe());
-    clearTimeout(this.expirationTimeout); 
   }
 }

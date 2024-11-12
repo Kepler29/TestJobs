@@ -3,6 +3,9 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CsvImportController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -18,11 +21,10 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // });
 
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:api');
-Route::get('/user', [AuthController::class, 'getAuthenticatedUser'])->middleware('auth:api');
+Route::get('/auth/me', [AuthController::class, 'getAuthenticatedUser'])->middleware('auth:api');
 
-Route::post('/file/import', [CsvImportController::class, 'import'])->name('file.import');
+Route::post('/file/import', [CsvImportController::class, 'import'])->middleware('auth:api');
 
-Route::post('/file/show', [CsvImportController::class, 'show'])->name('file.show');
+Route::get('/file/show', [CsvImportController::class, 'show'])->middleware('auth:api');

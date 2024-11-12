@@ -1,1 +1,43 @@
-<p>main works!</p>
+<div class="container">
+    <h1>Subir CSV y Mostrar Datos</h1>
+
+    <div *ngIf="currentUserSubject | async as currentUser" class="mt-5">
+        <div *ngIf="currentUser.roles[0].name == 'admin' ">
+            <input type="file" (change)="onFileChange($event)" accept=".csv"  />
+            <button (click)="uploadCSV()" [disabled]="!selectedFile">Subir CSV</button>
+        </div>
+    </div>
+  
+    <!-- Tabla para mostrar los datos -->
+    <table class="table table-responsive mt-5" *ngIf="csvData.length > 0">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Apellido paterno</th>
+          <th>Apellido Materno</th>
+          <th>Telefono</th>
+          <th>Calle</th>
+          <th>Numero externo</th>
+          <th>Numero interno</th>
+          <th>Colonia</th>
+          <th>Codigo postal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of csvData">
+          <td>{{ row.name }}</td>
+          <td>{{ row.frist_name }}</td>
+          <td>{{ row.last_name }}</td>
+          <td>{{ row.phone }}</td>
+          <td>{{ row.street }}</td>
+          <td>{{ row.number_external }}</td>
+          <td>{{ row.number_internal }}</td>
+          <td>{{ row.district }}</td>
+          <td>{{ row.cp }}</td>
+        </tr>
+      </tbody>
+    </table>
+  
+    <p *ngIf="csvData.length === 0">No hay datos disponibles.</p>
+  </div>
+  

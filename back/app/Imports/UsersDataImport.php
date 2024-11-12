@@ -18,6 +18,7 @@ class UsersDataImport implements ToModel
             'name' => $row['name'],
             'frist_name' => $row['frist_name'],
             'last_name' => $row['last_name'],
+            'phone' => $row['phone'],
             'street' => $row['street'],
             'number_external' => $row['number_external'],
             'number_internal' => $row['number_internal'],
